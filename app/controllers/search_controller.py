@@ -1,4 +1,6 @@
-from flask import Blueprint, render_template
+from flask import Blueprint, render_template, request, jsonify
+from app.pagerank import get_pagerank_scores
+import mysql.connector
 
 search_bp = Blueprint('search', __name__)
 
@@ -22,13 +24,45 @@ def privacy():
 def page_not_found(e):
     return render_template('404.html'), 404
 
-# API routes will be handled by the backend team, but you can define placeholders
-# @search_bp.route('/api/search')
-# def api_search():
-#     # This will be implemented by the backend team
-#     pass
+# API search endpoint
+@search_bp.route('/api/search')
+def api_search():
+    query = request.args.get('q', '')
+    conn = mysql.connector.connect(
+        host='localhost', user='root', password='', database='tb_math2'
+    )
+    cursor = conn.cursor(dictionary=True)
+    cursor.execute("SELECT * FROM crawler WHERE content LIKE %s", (f"%{query}%",))
+    results = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    pagerank_scores = get_pagerank_scores()
+    for r in results:
+        r['pagerank'] = float(pagerank_scores.get(r['idcrawler'], 0))
+        r['title'] = r['url']
+        r['snippet'] = r['content'][:200] + '...'
+        r['id'] = r['idcrawler']
+    results.sort(key=lambda x: x['pagerank'], reverse=True)
+    return jsonify(results)
 
-# @search_bp.route('/api/detail/<id>')
-# def api_detail(id):
-#     # This will be implemented by the backend team
-#     pass
+# API detail endpoint
+@search_bp.route('/api/detail/<int:page_id>')
+def api_detail(page_id):
+    conn = mysql.connector.connect(
+        host='localhost', user='root', password='', database='tb_math2'
+    )
+    cursor = conn.cursor(dictionary=True)
+    cursor.execute("SELECT * FROM crawler WHERE idcrawler = %s", (page_id,))
+    page = cursor.fetchone()
+    cursor.execute("SELECT to_node FROM hyperlink WHERE from_node = %s", (page_id,))
+    out_links = [row['to_node'] for row in cursor.fetchall()]
+    cursor.close()
+    conn.close()
+    pagerank_scores = get_pagerank_scores()
+    if page:
+        page['pagerank'] = float(pagerank_scores.get(page['idcrawler'], 0))
+        page['title'] = page['url']
+        page['content_full'] = page['content']
+        page['out_links'] = out_links
+        page['id'] = page['idcrawler']
+    return jsonify(page)

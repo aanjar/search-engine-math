@@ -5,7 +5,7 @@ def get_db_connection():
         host="localhost",
         user="root",
         password="",
-        database="namadb"
+        database="tb_math2"
     )
 
 def search_pages(keyword):
