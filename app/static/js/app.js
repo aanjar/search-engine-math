@@ -44,7 +44,7 @@ function renderSearchResults(data) {
                         <a href="${item.url}" target="_blank">${item.url}</a>
                     </h6>
                     <p class="card-text">${item.snippet}</p>
-                    <span class="badge bg-primary">PR: ${item.pagerank.toFixed(2)}</span>
+                    <span class="badge bg-primary">PR: ${item.pagerank.toFixed(8)}</span>
                 </div>
             </div>
         `;

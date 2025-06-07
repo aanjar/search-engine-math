@@ -50,4 +50,4 @@ def get_pagerank_scores():
 if __name__ == "__main__":
     scores = get_pagerank_scores()
     for node, score in scores.items():
-        print(f"Page {node}: {score:.4f}")
+        print(f"Page {node}: {score:.8f}")
