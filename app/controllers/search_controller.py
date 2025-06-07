@@ -29,7 +29,7 @@ def page_not_found(e):
 def api_search():
     query = request.args.get('q', '')
     conn = mysql.connector.connect(
-        host='localhost', user='root', password='', database='tb_math2'
+        host='localhost', user='root', password='', database='scrap'
     )
     cursor = conn.cursor(dictionary=True)
     cursor.execute("SELECT * FROM crawler WHERE content LIKE %s", (f"%{query}%",))
@@ -38,10 +38,10 @@ def api_search():
     conn.close()
     pagerank_scores = get_pagerank_scores()
     for r in results:
-        r['pagerank'] = float(pagerank_scores.get(r['idcrawler'], 0))
-        r['title'] = r['url']
+        r['pagerank'] = float(pagerank_scores.get(r['id'], 0))
+        r['title'] = r['title']
         r['snippet'] = r['content'][:200] + '...'
-        r['id'] = r['idcrawler']
+        r['id'] = r['id']
     results.sort(key=lambda x: x['pagerank'], reverse=True)
     return jsonify(results)
 
@@ -49,10 +49,10 @@ def api_search():
 @search_bp.route('/api/detail/<int:page_id>')
 def api_detail(page_id):
     conn = mysql.connector.connect(
-        host='localhost', user='root', password='', database='tb_math2'
+        host='localhost', user='root', password='', database='scrap'
     )
     cursor = conn.cursor(dictionary=True)
-    cursor.execute("SELECT * FROM crawler WHERE idcrawler = %s", (page_id,))
+    cursor.execute("SELECT * FROM crawler WHERE id = %s", (page_id,))
     page = cursor.fetchone()
     cursor.execute("SELECT to_node FROM hyperlink WHERE from_node = %s", (page_id,))
     out_links = [row['to_node'] for row in cursor.fetchall()]
@@ -60,9 +60,9 @@ def api_detail(page_id):
     conn.close()
     pagerank_scores = get_pagerank_scores()
     if page:
-        page['pagerank'] = float(pagerank_scores.get(page['idcrawler'], 0))
-        page['title'] = page['url']
+        page['pagerank'] = float(pagerank_scores.get(page['id'], 0))
+        page['title'] = page['title']
         page['content_full'] = page['content']
         page['out_links'] = out_links
-        page['id'] = page['idcrawler']
+        page['id'] = page['id']
     return jsonify(page)

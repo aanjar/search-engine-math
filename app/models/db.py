@@ -5,7 +5,7 @@ def get_db_connection():
         host="localhost",
         user="root",
         password="",
-        database="tb_math2"
+        database="scrap"
     )
 
 def search_pages(keyword):

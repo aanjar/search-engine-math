@@ -6,10 +6,10 @@ def get_adjacency_matrix():
         host='localhost',
         user='root',
         password='',  # ganti jika password MySQL kamu berbeda
-        database='tb_math2'
+        database='scrap'
     )
     cursor = conn.cursor()
-    cursor.execute("SELECT idcrawler FROM crawler ORDER BY idcrawler")
+    cursor.execute("SELECT id FROM crawler ORDER BY id")
     nodes = [row[0] for row in cursor.fetchall()]
     node_index = {node: idx for idx, node in enumerate(nodes)}
     N = len(nodes)
