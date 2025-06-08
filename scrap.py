@@ -7,7 +7,6 @@ import time
 import urllib.parse
 import os
 
-# ---------- Konfigurasi ----------
 START_URL = "https://elektro.um.ac.id"
 DOMAIN = "elektro.um.ac.id"
 
@@ -19,7 +18,6 @@ EXCLUDED_EXTENSIONS = [
     '.exe', '.iso', '.apk'
 ]
 
-# ---------- Setup Database ----------
 def connect_db():
     return mysql.connector.connect(
         host="localhost",
@@ -40,30 +38,25 @@ def insert_link(db, from_node, to_node):
     cursor.execute("INSERT INTO hyperlink (from_node, to_node) VALUES (%s, %s)", (from_node, to_node))
     db.commit()
 
-# ---------- Normalisasi URL ----------
 def normalize_url(url):
-    url = urllib.parse.urldefrag(url)[0]  # Remove fragments
+    url = urllib.parse.urldefrag(url)[0]
     return url.rstrip('/')
 
-# ---------- Cek Ekstensi Terkecuali ----------
 def should_exclude_url(url):
     parsed = urllib.parse.urlparse(url)
     path = parsed.path.lower()
     _, ext = os.path.splitext(path)
     return ext in EXCLUDED_EXTENSIONS
 
-# ---------- BFS Crawl Function ----------
 def bfs_crawl(start_url):
     db = connect_db()
     visited = set()
     queue = deque()
 
-    # Setup selenium
     options = Options()
-    # options.add_argument("--headless")
     driver = webdriver.Chrome(options=options)
 
-    queue.append((start_url, None))  # (url, parent_id)
+    queue.append((start_url, None))
 
     while queue:
         current_url, parent_id = queue.popleft()
@@ -77,31 +70,19 @@ def bfs_crawl(start_url):
             driver.get(current_url)
             time.sleep(1)
 
-            # Kandidat class untuk konten utama
-            # TITLE_CLASSES = ["et_pb_section_2", "entry-title"]          
             CONTENT_SELECTORS = {
-                "entry-content": ("p", None),           # ambil semua <p>
-                "et_pb_section_3": ("div", "et_pb_text_inner"),  # ambil <div class="et_pb_text_inner">
+                "entry-content": ("p", None),          
+                "et_pb_section_3": ("div", "et_pb_text_inner"),  
             }
             
-            # for t in TITLE_CLASSES:
-            #     try:
-            #         element = driver.find_element(By.CLASS_NAME, t)
-            #         title = element.text.strip()
-            #         if title:
-            #             break
-            #     except:
-            #         pass
             title = driver.title
             content_parts = []
             for cls, (tag, sub_class) in CONTENT_SELECTORS.items():
                 try:
                     container = driver.find_element(By.CLASS_NAME, cls)
                     if sub_class is None:
-                        # Ambil semua elemen <tag> langsung di container
                         elements = container.find_elements(By.TAG_NAME, tag)
                     else:
-                        # Ambil elemen dengan class sub_class di dalam tag
                         elements = container.find_elements(By.CSS_SELECTOR, f"{tag}.{sub_class}")
                     
                     for el in elements:
@@ -133,6 +114,5 @@ def bfs_crawl(start_url):
     driver.quit()
     db.close()
 
-# ---------- Jalankan ----------
 if __name__ == "__main__":
     bfs_crawl(START_URL)
