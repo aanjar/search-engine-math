@@ -95,7 +95,7 @@ function renderDetail(data) {
     detailSection.appendChild(urlElement);
 
     const pagerankElement = document.createElement('p');
-    pagerankElement.innerHTML = `<small class="text-secondary">PageRank: ${data.pagerank.toFixed(2)}</small>`;
+    pagerankElement.innerHTML = `<small class="text-secondary">PageRank: ${data.pagerank.toFixed(8)}</small>`;
     detailSection.appendChild(pagerankElement);
 
     const contentElement = document.createElement('div');
